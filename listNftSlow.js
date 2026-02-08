@@ -220,7 +220,7 @@ async function processSendQueue() {
 
 // -------------------- check new NFT --------------------
 async function checkNft() {
-  const nftAddresses = await getLastNftAddresses(10);
+  const nftAddresses = await getLastNftAddresses(5);
 
   for (const addrRaw of nftAddresses) {
     const normalizedAddress = addrRaw.trim().toLowerCase();
@@ -305,6 +305,14 @@ bot.onText(/\/stop_nft/, (msg) => {
     bot.sendMessage(CHAT_ID, '⚠️ Не запущено');
   }
 });
-bot.on('message', msg => {
-  console.log('MESSAGE FROM:', msg.chat.id, msg.text);
-});
+
+process.on('uncaughtException', e => console.error('UNCAUGHT:', e));
+process.on('unhandledRejection', e => console.error('UNHANDLED REJECTION:', e));
+
+const express = require('express');
+const app = express();
+
+app.get('/', (req, res) => res.send('Bot is alive!'));
+
+const port = process.env.PORT || 3000;
+app.listen(port, () => console.log(`Server running on port ${port}`));
