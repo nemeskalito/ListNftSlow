@@ -220,7 +220,7 @@ async function processSendQueue() {
 
 // -------------------- check new NFT --------------------
 async function checkNft() {
-  const nftAddresses = await getLastNftAddresses(5);
+  const nftAddresses = await getLastNftAddresses(10);
 
   for (const addrRaw of nftAddresses) {
     const normalizedAddress = addrRaw.trim().toLowerCase();
