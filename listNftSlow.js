@@ -204,15 +204,15 @@ ${attributesText.trim()}
 // -------------------- очередь отправки --------------------
 async function processSendQueue() {
   if (sending || sendQueue.length === 0) return;
-	sending = true;
-	 // СИЛЬНАЯ ПАУЗА 10 СЕКУНД
-  console.log('⏸ Ждем 10 секунд перед отправкой в Telegram...');
-  await new Promise(r => setTimeout(r, 10000));
-  console.log(`📦 Начинаю отправку ${sendQueue.length} NFT...`);
-	
+  sending = true;
+
+  console.log('⏸ Ждём 10 секунд перед отправкой в Telegram...');
+  await new Promise(r => setTimeout(r, 10_000));
+  
   while (sendQueue.length > 0) {
     const nft = sendQueue.shift();
     await sendNft(nft);
+    await new Promise(r => setTimeout(r, 1000));
   }
 
   sending = false;
@@ -220,7 +220,7 @@ async function processSendQueue() {
 
 // -------------------- check new NFT --------------------
 async function checkNft() {
-  const nftAddresses = await getLastNftAddresses(10);
+  const nftAddresses = await getLastNftAddresses(5);
 
   for (const addrRaw of nftAddresses) {
     const normalizedAddress = addrRaw.trim().toLowerCase();
@@ -282,7 +282,7 @@ async function processPending() {
 // -------------------- команды --------------------
 bot.onText(/\/start_nft/, (msg) => {
   if (msg.chat.id !== CHAT_ID) return
-	console.log(msg.chat.id)
+
   if (!nftInterval) {
     nftInterval = setInterval(checkNft, 1000);
     pendingInterval = setInterval(processPending, 1000);
@@ -305,14 +305,17 @@ bot.onText(/\/stop_nft/, (msg) => {
     bot.sendMessage(CHAT_ID, '⚠️ Не запущено');
   }
 });
-
 process.on('uncaughtException', e => console.error('UNCAUGHT:', e));
 process.on('unhandledRejection', e => console.error('UNHANDLED REJECTION:', e));
 
-const express = require('express');
-const app = express();
+const express = require('express')
+const app = express()
+const port = process.env.PORT || 4000 
 
-app.get('/', (req, res) => res.send('Bot is alive!'));
+app.get('/', (req, res) => {
+  res.send('Hello World!')
+})
 
-const port = process.env.PORT || 3000;
-app.listen(port, () => console.log(`Server running on port ${port}`));
+app.listen(port, () => {
+  console.log(`Example app listening on port ${port}`)
+})
