@@ -206,9 +206,6 @@ async function processSendQueue() {
   if (sending || sendQueue.length === 0) return;
   sending = true;
 
-  console.log('⏸ Ждём 10 секунд перед отправкой в Telegram...');
-  await new Promise(r => setTimeout(r, 10_000));
-  
   while (sendQueue.length > 0) {
     const nft = sendQueue.shift();
     await sendNft(nft);
