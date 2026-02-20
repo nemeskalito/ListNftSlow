@@ -302,17 +302,3 @@ bot.onText(/\/stop_nft/, (msg) => {
     bot.sendMessage(CHAT_ID, '⚠️ Не запущено');
   }
 });
-process.on('uncaughtException', e => console.error('UNCAUGHT:', e));
-process.on('unhandledRejection', e => console.error('UNHANDLED REJECTION:', e));
-
-const express = require('express')
-const app = express()
-const port = process.env.PORT || 4000 
-
-app.get('/', (req, res) => {
-  res.send('Hello World!')
-})
-
-app.listen(port, () => {
-  console.log(`Example app listening on port ${port}`)
-})
