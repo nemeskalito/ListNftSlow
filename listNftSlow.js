@@ -24,13 +24,16 @@ const MAX_PENDING_TIME = 5 * 60 * 1000; // 5 минут
 const SENT_TTL = 10 * 60 * 1000; // повторно показывать NFT через 10 минут
 let last429Log = 0;
 
+const axiosInstance = axios.create({
+  timeout: 10000, // 10 сек максимум ожидания tonapi
+});
 // -------------------- safe GET с backoff --------------------
 async function safeGet(url, params = {}) {
   let tries = 0;
   let wait = 2000;
   while (tries < 5) {
     try {
-      const { data } = await axios.get(url, { params });
+      const { data } = await axiosInstance.get(url, { params });
       return data;
     } catch (e) {
       if (e.response?.status === 429) {
@@ -49,6 +52,16 @@ async function safeGet(url, params = {}) {
     }
   }
   return null;
+}
+
+// -------------------- защита от зависшего Telegram --------------------
+async function sendWithTimeout(promise, ms = 15000) {
+  return Promise.race([
+    promise,
+    new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('Telegram timeout')), ms)
+    )
+  ]);
 }
 
 // -------------------- TON address → friendly --------------------
@@ -192,11 +205,14 @@ ${saleLink ? `🛒 <a href="${saleLink}">Купить на Getgems</a>\n` : ''}
 ${attributesText.trim()}
 `.trim();
 
-  await bot.sendPhoto(CHAT_ID, image, {
-    caption,
-    parse_mode: 'HTML',
-    disable_web_page_preview: true,
-  });
+  await sendWithTimeout(
+    bot.sendPhoto(CHAT_ID, image, {
+      caption,
+      parse_mode: 'HTML',
+      disable_web_page_preview: true,
+    }),
+    15000
+  );
 
   console.log(`✅ NFT ПОКАЗАНА | ${name} | ${price ? price + ' TON' : 'pending'} | Power: ${totalPowerFinal}`);
 }
@@ -206,13 +222,21 @@ async function processSendQueue() {
   if (sending || sendQueue.length === 0) return;
   sending = true;
 
-  while (sendQueue.length > 0) {
-    const nft = sendQueue.shift();
-    await sendNft(nft);
-    await new Promise(r => setTimeout(r, 1000));
-  }
+  try {
+    while (sendQueue.length > 0) {
+      const nft = sendQueue.shift();
 
-  sending = false;
+      try {
+        await sendNft(nft);
+      } catch (e) {
+        console.error('❌ Ошибка отправки NFT:', e.message);
+      }
+
+      await new Promise(r => setTimeout(r, 1000));
+    }
+  } finally {
+    sending = false;
+  }
 }
 
 // -------------------- check new NFT --------------------
@@ -302,3 +326,12 @@ bot.onText(/\/stop_nft/, (msg) => {
     bot.sendMessage(CHAT_ID, '⚠️ Не запущено');
   }
 });
+
+
+// -------------------- watchdog очереди --------------------
+setInterval(() => {
+  if (sending && sendQueue.length > 20) {
+    console.error('💀 Очередь зависла — принудительный сброс sending');
+    sending = false;
+  }
+}, 15000);
