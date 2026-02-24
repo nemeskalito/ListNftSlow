@@ -39,14 +39,14 @@ async function safeGet(url, params = {}) {
       if (e.response?.status === 429) {
         const now = Date.now();
         if (now - last429Log > 5000) {
-          console.warn(`⏳ 429 rate limit, повтор через ${wait}мс`);
+          // console.warn(`⏳ 429 rate limit, повтор через ${wait}мс`);
           last429Log = now;
         }
         await new Promise(r => setTimeout(r, wait));
         tries++;
         wait *= 2;
       } else {
-        console.error('❌ HTTP ошибка:', e.message);
+        // console.error('❌ HTTP ошибка:', e.message);
         return null;
       }
     }
@@ -214,7 +214,7 @@ ${attributesText.trim()}
     15000
   );
 
-  console.log(`✅ NFT ПОКАЗАНА | ${name} | ${price ? price + ' TON' : 'pending'} | Power: ${totalPowerFinal}`);
+  // console.log(`✅ NFT ПОКАЗАНА | ${name} | ${price ? price + ' TON' : 'pending'} | Power: ${totalPowerFinal}`);
 }
 
 // -------------------- очередь отправки --------------------
@@ -229,7 +229,7 @@ async function processSendQueue() {
       try {
         await sendNft(nft);
       } catch (e) {
-        console.error('❌ Ошибка отправки NFT:', e.message);
+        // console.error('❌ Ошибка отправки NFT:', e.message);
       }
 
       await new Promise(r => setTimeout(r, 1000));
@@ -253,7 +253,7 @@ async function checkNft() {
     const collectionName = nft.collection?.name?.trim();
     if (collectionName !== TARGET_COLLECTION) {
       ignoredNfts.add(normalizedAddress);
-      console.log(`❌ NFT ПРОПУЩЕНА | ${nft.metadata?.name || 'Без названия'} | другая коллекция`);
+      // console.log(`❌ NFT ПРОПУЩЕНА | ${nft.metadata?.name || 'Без названия'} | другая коллекция`);
       continue;
     }
 
